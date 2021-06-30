@@ -7,7 +7,11 @@ router.get('/',(req,res)=>{
 });
 
 router.post('/',(req,res)=>{
-    console.log(req.body.userName);
-    res.sendStatus(200);
+    authenticateUser(req).then(result=>{
+        res.send("welcome "+result.userName);
+    }).catch(err=>{
+        console.log(err);
+        res.send(err);
+    })
 });
 module.exports = router;

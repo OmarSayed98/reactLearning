@@ -1,23 +1,40 @@
 const user = require('../models/user');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { Error } = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const authenticateUser = (req,res)=>{
-    user.findOne({userName: req.body.userName}).then((result)=>{
-        if(result == null){
-            res.locals.validUser = false;
-        }
-        else{
-            res.cookie('jwt', createToken(result._id), {maxAge: 100*60*60, httpOnly: true});
-            res.redirect('/home');
-        }
-    }).catch(err=>{
-        throw new Exceptin("error occured while trying to log in : " + err);
+
+const authenticateUser = (req)=>{
+    return new Promise((resolve, reject)=>{
+        user.findOne({userName: req.body.username}).then((result)=>{
+            if(result == null){
+                reject("invalid username or password");
+                return;
+            }
+            else{
+                bcrypt.compare(req.body.password, result.password).then((result1)=> {
+                    if(!result1){
+                        reject("incorrect username or password");
+                        return;
+                    }
+                    jwt.sign({id: result._id}, process.env.jwtSecret).then(token=>{
+                        res.cookie('jwt', token, {maxAge: 100*60*60, httpOnly: true});
+                        resolve(result.userName);
+                        return;
+                    }).catch(err=>{
+                        reject("failed to create token "+err);
+                        return;
+                    })
+                }).catch(err=>{
+                    reject("failed to compare passwords" + err);
+                    return;
+                });
+            }
+        }).catch(err=>{
+            reject("error occured while searching for user "+err);
+            return;
+        });
     });
-}
-
-const createToken = (id)=>{
-    return jwt.sign({id: id}, process.env.jwtSecret);
 }
 
 const userAuthorization = (req, res, next)=>{
