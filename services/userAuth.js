@@ -33,7 +33,38 @@ const userAuthorization = (req, res, next)=>{
     });
 }
 
+const userCreation = (body)=>{
+    return new Promise((resolve, reject)=>{
+        user.findOne({$or:[{email: body.email},{userName:body.username}]}).then(res=>{
+            if(res){
+                if(res.email == body.email)
+                    reject(new Error("email already exists"));
+                else
+                    reject(new Error("username already exists"));
+                return;
+            }
+            User = new user({
+                userName:body.username,
+                password:body.password,
+                email:body.email,
+                dateOfBirth:body.age
+            });
+            User.save().then(result=>{
+                resolve(result);
+                return;
+            }).catch(err=>{
+                reject(new Error("failed to save user "+err));
+                return;
+            });
+        }).catch(err=>{
+            reject(new Error("failed to save user "+err));
+            return;
+        });
+    });
+}
+
 module.exports = {
     authenticateUser,
-    userAuthorization
+    userAuthorization,
+    userCreation
 }
