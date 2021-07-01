@@ -17,14 +17,15 @@ const authenticateUser = (req)=>{
                         reject("incorrect username or password");
                         return;
                     }
-                    jwt.sign({id: result._id}, process.env.jwtSecret).then(token=>{
-                        res.cookie('jwt', token, {maxAge: 100*60*60, httpOnly: true});
-                        resolve(result.userName);
+                    jwt.sign({id: result._id}, process.env.jwtSecret, function(err, token){
+                        if(err){
+                            reject(err);
+                            return;
+                        }
+                        //res.cookie('jwt', token, {maxAge: 100*60*60, httpOnly: true});
+                        resolve(token);
                         return;
-                    }).catch(err=>{
-                        reject("failed to create token "+err);
-                        return;
-                    })
+                    });
                 }).catch(err=>{
                     reject("failed to compare passwords" + err);
                     return;

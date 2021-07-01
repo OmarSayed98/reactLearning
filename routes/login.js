@@ -8,7 +8,9 @@ router.get('/',(req,res)=>{
 
 router.post('/',(req,res)=>{
     authenticateUser(req).then(result=>{
-        res.send("welcome "+result.userName);
+        console.log(result);
+        res.cookie('jwt', result, {maxAge: 100*60*60, httpOnly: true});
+        res.send(result);
     }).catch(err=>{
         console.log(err);
         res.send(err);
